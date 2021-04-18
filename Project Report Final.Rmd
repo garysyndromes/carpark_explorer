@@ -1,0 +1,839 @@
+---
+title: "Project Report (Team3_SA2)"
+author: "SA2 Team 3"
+date: "4/16/2021"
+output: html_document
+---
+
+# 1. Case Description
+
+<font size="3"> **1.1 Problem** </font>
+
+As drivers ourselves, we have noticed the lack of car park information prior to arrival.  Although most car parks in Singapore have been fitted with electronic sensors to display the number of available parking lots and car park charges, there is no centralised database to view this data. Drivers can only check information such as availability and car park rates after arriving at the car park entrance. As a result, drivers would often have to queue for long periods of time or spend time searching for nearby alternative car parks. For users, this situation inconveniences them and creates dissatisfaction. For car park providers (especially for attractions and shopping malls), it could mean a loss of potential customers as long queues drive them away. 
+
+As such, our team wants to tackle the lack of carpark information and make it more convenient for drivers to check car park information prior to arrival. 
+
+***
+
+<font size="3"> **1.2 Market Analysis: Business Viability** </font>
+
+However, before diving in to craft our solutions, research needs to be conducted in order to validate the business viability of the problem.  
+
+**Demand**: In Singapore alone, there are over 600,000 car owners, making up at least 35% of households (Lin, 2021). This presents us with a large potential base of users which can eventually help to create a valuable network. This network will then help to bring in our profits as the number of users on our application increases. 
+
+**Supply**: Likewise, there are over 12,000 car parks in Singapore, with over 1.4 million parking lots in total (Budget Direct Insurance, 2020). Thus, there is substantial information to create an impactful application.
+
+Thus, with sufficient potential demand and supply, we believe that this is a viable business problem.
+
+***
+
+<font size="3"> **1.3 Market Analysis: Current Practices** </font>
+
+Currently, there is information about car park availability in the form of electronic displays, at car park entrances. Most of the time, car park rates are also displayed along with the car park availability. 
+
+From our research, there are also some applications available in the market that provide information on car park rates and car park availability. Table 1 summarizes these car parks applications and their respective features. Information in this table was obtained from Google Play Store and Apple Store. 
+
+<center> 
+
+![Table 1: Summary of available applications and their features](application_summary.png){width=70%} 
+
+</center>
+
+However, as seen in the table above, most of the applications provide these car park rates and car park availability separately. In the event that the application provides both types of information, the parking lot availability information tends to be available only for major car parks. Hence, there is still an information gap. 
+
+In addition, some of the applications available only provide basic functions, such as simply displaying car park availability or rates, without any other interactive functions. Currently, there is no application that combines all information and functions. The following sections will explain some of the pain points faced by consumers and our proposed solution to provide a more comprehensive car park application. 
+
+***
+
+<font size="3"> **1.4 Consumer Pain Points** </font>
+
+Some of the pain points that consumers currently face are listed below:
+
+**1.4.1 Overall**: Although the current applications on the market address the current problems, there is no single comprehensive application that combines all useful information for drivers, information about car park rates and car park availability are usually on different applications.  
+
+**1.4.2 Car Park Availability**: Information about car park availability is separated based on carpark providers. For example, information about HDB car parks and information about car parks provided by private operators, such as Capitamall, are available on different applications or websites. There is no single application that includes information about all types of car parks in Singapore. 
+
+Furthermore, even with live information, it is still difficult to plan ahead. For example, if a person plans to arrive at Ion Orchard at 6pm, he/she is not able to check the forecasted car park availability beforehand at 1pm and hence not able to plan their journey ahead of time.   
+
+**1.4.3 Car Park Rates**:  It is difficult to compare car park prices as car park rates are different for different providers. Some are priced per min, some are priced per 30 mins while others are priced per hour. 
+
+***
+
+<font size="3"> **1.5 Proposed Solutions** </font>
+
+The following table summarizes the team’s proposed solutions to address the respective consumer pain points that the team has identified:  
+
+<center> 
+
+![Table 2: Summary of problems identified and the proposed solutions](solution_summary.png){width=50%} 
+
+</center>
+
+With these proposed solutions in mind, we will do a comparison to illustrate the difference between Carpark Explorer and its competitors in the market. 
+
+<center> 
+
+![Table 3: Carpark Explorer Benchmarked Against Competitors](comparison.png){width=70%}
+
+</center>
+
+As seen from the table above, Carpark Explorer does not have a function that provides traffic information. We chose not to include this function as we recognise the limits in its usage due to other applications, such as Google Maps, which have a superior and competitive advantage in this.  
+
+On the other hand, Carpark Explorer will contain two unique features that our competitors do not have. Specifically, these features will help to predict car park lots availability and provide real-time weather information as well as weather forecast 1 hour ahead of time. As mentioned in table 2, these two unique features serve to differentiate our application from our competitors’. 
+
+***
+
+# 2. Data Source
+
+<font size="3"> **2.1 Real-time Car Park Availability** </font>
+
+**Requirements**: To accommodate this feature, we needed a data set that provided us with real time information, and refreshed on a regular basis (at least 30mins). 
+
+**Source**: 
+
+- LTA Datamall: https://datamall.lta.gov.sg/content/datamall/en/dynamic-data.html 
+- Data.gov: https://data.gov.sg/dataset/carpark-availability
+
+**Execution**: Retrieve and joined the data from the 2 different data sources 
+
+The following codes explain how we obtained the real-time car park availability. 
+
+```{r, message = FALSE, warning=FALSE}
+
+library(rvest)
+library(jsonlite)
+library(dplyr)
+library(httr)
+library(dplyr)
+```
+
+```{r}
+url1 <- "http://datamall2.mytransport.sg/ltaodataservice/CarParkAvailabilityv2"
+my_raw_result1 <- GET(url1,add_headers(AccountKey = "UbnxVc29Qxub8XGmmXlJMw==",accept = "application/json"))
+result1 <- content(my_raw_result1, as = 'text') %>%fromJSON()
+data1 <- as.data.frame(result1)
+
+url2 <- "http://datamall2.mytransport.sg/ltaodataservice/CarParkAvailabilityv2?$skip=500"
+my_raw_result2 <- GET(url2,add_headers(AccountKey = "UbnxVc29Qxub8XGmmXlJMw==",accept = "application/json"))
+result2 <- content(my_raw_result2, as = 'text') %>%fromJSON()
+data2 <- as.data.frame(result2)
+
+url3 <- "http://datamall2.mytransport.sg/ltaodataservice/CarParkAvailabilityv2?$skip=1000"
+my_raw_result3 <- GET(url3,add_headers(AccountKey = "UbnxVc29Qxub8XGmmXlJMw==",accept = "application/json"))
+result3 <- content(my_raw_result3, as = 'text') %>%fromJSON()
+data3 <- as.data.frame(result3)
+
+url4 <- "http://datamall2.mytransport.sg/ltaodataservice/CarParkAvailabilityv2?$skip=1500"
+my_raw_result4 <- GET(url4,add_headers(AccountKey = "UbnxVc29Qxub8XGmmXlJMw==",accept = "application/json"))
+result4 <- content(my_raw_result4, as = 'text') %>%fromJSON()
+data4 <- as.data.frame(result4)
+
+url5 <- "http://datamall2.mytransport.sg/ltaodataservice/CarParkAvailabilityv2?$skip=2000"
+my_raw_result5 <- GET(url5,add_headers(AccountKey = "UbnxVc29Qxub8XGmmXlJMw==",accept = "application/json"))
+result5 <- content(my_raw_result5, as = 'text') %>%fromJSON()
+data5 <- as.data.frame(result5)
+
+availability <- rbind(data1,data2,data3,data4,data5)
+availability <- select(availability, value.Development, value.AvailableLots, value.LotType)
+names(availability) <- c("Carpark", "AvailableLots", 'LotType')
+
+head(availability, 5)
+```
+
+***
+
+<font size="3"> **2.2 Historical Data on Car Park Availability** </font>
+
+**Requirements**: To create an accurate prediction of carpark data, we need rely on historical data. We will need data for car park availability for at least a period of a month 
+
+**Source**:
+
+- Data.gov: https://data.gov.sg/dataset/carpark-availability
+
+**Limitation**: The data is limited to HDB data set as LTA mall does not provide past data for car park availability 
+
+**Execution**: Scraped 2 months worth of data and combined into various csv files according to the day of the week 
+
+Detailed codes on how the team obtained the data will be explained in section 3 under **Predictive Model to Forecast Availability**. 
+
+***
+
+<font size="3"> **2.3 Car Park Rates** </font>
+
+**Requirements**: Carpark rates for different timings e.g. public holiday, weekday, weekend
+
+**Source**: 
+
+* Data.gov:
+  + HDB carpark information and rates: https://data.gov.sg/dataset/hdb-carpark-information
+  + LTA Car park rates: https://onemotoring.lta.gov.sg/content/onemotoring/home/owning/ongoing-car-costs/parking/parking_rates.1.html 
+  + URA Car park rates: https://spring.ura.gov.sg/lad/ecas/motorist/pp_info/ppInfoEnq.cfm
+
+**Execution**: Combined into one dataset “Carpark v9.csv”
+
+```{r}
+carpark_data <- read.csv("Carpark v9.csv")
+head(carpark_data, 5)
+```
+
+For ease of use, all carpark information is then combined with the availability data obtained in 2.1 to form one dataset. 
+
+```{r}
+combined <- full_join(availability, carpark_data)
+head(combined, 5)
+```
+
+***
+
+<font size="3"> **2.4 Real-time Weather Information** </font>
+
+**Requirements**: To provide accurate data we will need a live dataset on the weather conditions, refreshed frequently (at least 30min). The data set will also need to provide weather information exact to Singapore’s regions, e.g Ang Mo Kio, Bishan
+
+**Source**: 
+
+- AccuWeather: https://developer.accuweather.com/accuweather-forecast-api/apis/get/forecasts/v1/hourly/1hour/%7BlocationKey%7D 
+
+Detailed codes on how the team obtained the data will be explained in section 3 under **Real-time Weather Forecast**.
+
+***
+
+# 3. Description about APP Functionalities and Methodology
+
+<font size="3"> **3.1 Inputting Destination in Search Bar** </font>
+
+When users open the app, they will be presented with a search bar, at the top right hand corner, which can be used to input their destination. The location could either be a car park, a shopping mall or an attraction.   
+
+***
+
+<font size="3"> **3.2 Selecting Vehicle Type** </font>
+
+Next, there is a radio button for users to select the type of vehicle that they are driving. This helps to narrow and filter the results based on the users’ needs. This function is also important for our predictive model which will be explained in the following sections.
+
+***
+
+<font size="3"> **3.3 Comparing Car Park Rates** </font>
+
+In order to make it more convenient for users to compare car park rates, we added a function that will automatically calculate the parking charges based on parking duration and the day of the week. 
+
+After selecting the location and vehicle type, the user has to adjust the start date and end date as different days of the week have different rates. Secondly, the user has to provide their estimated arrival time to the car park (i.e. Start time) and the estimated departure time from the car park (i.e. End time). All of this information is crucial for the calculation of total cost as the parking duration, day of the week and location determines the car park rate with which the application will reference. After selecting all the relevant inputs, the application will automatically calculate the total cost of parking and return the value under "Parking Charges:". 
+
+Since HDB car parks have the same rates, we are able to calculate prices based on the parking duration and the day of the week. However, it is difficult to calculate car park rates for car parks from other providers due to the vast difference in car park rate policies. As such, for non-HDB car parks, the application will return “This is a non-HDB carpark, refer to map for parking rates” instead of providing the actual value of total cost.
+
+**3.3.1 Methodology**
+
+There are 4 main categories for the calculation of the daily rates for different carparks.
+
+- Weekdays and Saturdays (non-central area)
+- Weekdays and Saturdays (central area)
+- Sundays and Public Holidays (free parking from 7am to 10.30pm)
+- Sundays and Public Holidays (free parking from 1pm to 10.30pm)
+
+Functions are then written for the calculation for each of the 4 different categories, and a function (daily_rate) was used to calculate the daily rates for a selected carpark given the start and end time in the same day.
+
+However, we know that some people would want to park their cars overnight at the carparks. Therefore, an overall function (get_rates) was used to calculate the cumulative rates across the days. The function splits the total duration by days, and check which category does that given day fall under. Thereafter, the daily rate is calculated. Finally, the cumulative daily rates are returned.
+
+As seen in the codes below, we created multiple functions that will automatically calculate the car park prices depending on the time of the day as well as the day of the week. 
+
+```{r}
+  non_sunday_cal <- function(start, end)
+  {
+    total <- as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M'), units = 'mins')
+    return (total * 0.02)
+  }
+```
+
+```{r}
+  non_sunday_cal_central <- function(start, end)
+  {
+    total <- 0
+    #if start before 0700
+    if (as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') < 0)
+    {
+      #if end before 0700
+      ifelse(as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') <= 0, 
+             total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M')),
+             {
+               total <- total - as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') 
+               #if ends before 1700
+               ifelse (as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('17:00', format = '%H:%M'), units = 'mins') < 0 & as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') >= 0, 
+                       total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') * 2, 
+                       total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('17:00', format = '%H:%M'), units = 'mins') + 1200 
+               )
+             }
+      )
+    }
+    #if start before 1700 and after 0700
+    if (as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('17:00', format = '%H:%M'), units = 'mins') < 0 & as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') >= 0)
+    {
+      #if end before 1700
+      ifelse (as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('17:00', format = '%H:%M'), units = 'mins') < 0, 
+              total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M')) * 2,
+              total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('17:00', format = '%H:%M'), units = 'mins') + as.numeric(as.POSIXct('17:00', format = '%H:%M') - as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M'), units = 'mins') * 2
+      )
+    }
+    #if start after 1700
+    if (as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('17:00', format = '%H:%M'), units = 'mins') > 0)
+    {
+      total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M'), units = 'mins')
+    }
+    return (total * 0.02)
+  }
+```  
+
+```{r}  
+  sunday_cal_7 <- function(start, end)
+  {
+    total <- 0
+    #if start before 0700
+    if (as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') < 0)
+    {
+      #if end before 0700
+      ifelse(as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') <= 0, 
+             total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M')),
+             total <- total - as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') 
+      )
+      #if ends after 2230
+      if (as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins') > 0)
+      {
+        total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins')
+      }
+    }
+    #if start before 2230 and after 0700
+    if (as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins') < 0 & as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('07:00', format = '%H:%M'), units = 'mins') >= 0)
+    {
+      #if end after 2230
+      if (as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins') > 0)
+      {
+        total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins')
+      }
+    }
+    #if start after 2230
+    if (as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins') > 0)
+    {
+      total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M'))
+    }
+    return (total * 0.02)
+  }
+```
+
+```{r}
+  #sunday calculation for after 1-10.30 free
+  sunday_cal_13 <- function(start, end)
+  {
+    total <- 0
+    #if start before 1300
+    if (as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('13:00', format = '%H:%M'), units = 'mins') < 0)
+    {
+      #if end before 1300
+      ifelse(as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('13:00', format = '%H:%M'), units = 'mins') <= 0, 
+             total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M')),
+             total <- total - as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('13:00', format = '%H:%M'), units = 'mins') 
+      )
+      #if ends after 2230
+      if (as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins') > 0)
+      {
+        total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins')
+      }
+    }
+    #if start before 2230 and after 1300
+    if (as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins') < 0 & as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('13:00', format = '%H:%M'), units = 'mins') >= 0)
+    {
+      #if end after 2230
+      if (as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins') > 0)
+      {
+        total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins')
+      }
+    }
+    #if start after 2230
+    if (as.numeric(as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M') - as.POSIXct('22:30', format = '%H:%M'), units = 'mins') > 0)
+    {
+      total <- total + as.numeric(as.POSIXct(format(end, format = '%H:%M'), format = '%H:%M') - as.POSIXct(format(start, format = '%H:%M'), format = '%H:%M'))
+    }
+    return (total * 0.02)
+  }
+```
+
+```{r}
+  #list of central car parks with special rates calculation (not just 1.20 per hour)  
+  central_carpark <- c('ACB', 'BBB', 'BRB1', 'CY', 'DUXM', 'HLM', 'KAB', 'KAM', 'KAS', 'PRM', 'SLS', 'SR1', 'SR2', 'TPM', 'UCS', 'WCB')
+  
+  daily_rate <- function(carpark, start, end)
+  {
+    df_carpark <- df_hdb[df_hdb$CarparkID == carpark,]
+    ifelse(wday(start) == 1 | date(start) %in% public_hols$date,
+           {
+             if (df_carpark$free_parking == "SUN & PH FR 7AM-10.30PM")
+             {
+               return (sunday_cal_7(start, end))
+             }
+             if (df_carpark$free_parking == "SUN & PH FR 1PM-10.30PM")
+             {
+               return (sunday_cal_13(start, end))
+             }
+             if (df_carpark$free_parking == 'NO')
+             {
+               return (non_sunday_cal(start, end))
+             }
+           },
+           {
+             ifelse (df_carpark$CarparkID %in% central_carpark, 
+                     return (non_sunday_cal_central(start, end)),
+                     return (non_sunday_cal(start,end))
+             )
+           }
+    )
+  }
+  
+  get_rates <- function(carpark, start, end)
+  {
+    ifelse (date(start) == date(end),
+            {
+              return (daily_rate(carpark, start, end))
+            },
+            {
+              total <- 0
+              while (as.numeric(date(end) - date(start), units = 'days') > 0)
+              {
+                mid <- as.POSIXct(paste(date(start), '23:59'))
+                total <- total + daily_rate(carpark, start, mid) + 0.02
+                start <- as.POSIXct(paste(date(start + days(1)), '00:00'))
+              }
+              total <- total + daily_rate(carpark, start, end)
+              return (total)
+            }
+    )
+  }
+```
+
+***
+
+<font size="3"> **3.4 Real-time Weather Forecast** </font> 
+
+In order to differentiate ourselves from others, as well as to increase the comprehensiveness of the application, our team incorporated real-time weather information to support users’ car park choice. The weather information is presented on the sidebar panel in the form of text. Once the user has selected a car park, the application automatically returns the current weather at the car park as well as the hourly forecast (as shown in Figure 1). This allows users to check the weather so that they can decide whether to select an alternative car park in the event that it is raining and the initial car park selected is not sheltered.  
+
+<center> 
+
+![Figure 1: Example of Weather Panel](weather_panel.png){width=30%}
+
+</center>
+
+**3.4.1 Methodology**
+
+The weather information is retrieved from Accuweather, a weather service provider. The weather information on Accuweather is segmented by the different geographical area (e.g. Sembawang Estate, Tampines, Jurong West). 
+
+1. We obtain the geographical area for the given latitude and longitude with an API call.
+2. Using the geographical area, we then obtain the weather information for both the current weather and 1-hourly forecasted weather using separate API calls with the geographical area as the location key. 
+
+For the current weather, we retrieve the current weather, and the type of precipitation (e.g. thunderstorm, showers, hail) if there is precipitation. The results are then presented in the following format: 
+
+- ‘current weather’ (if there are no precipitation)
+- ‘current weather’ with ‘type of precipitation’ (if there are precipitation)
+
+For forecasted weather, we retrieve the forecasted weather, and the probability of precipitation if there are any. The results are the presented in the following format:
+
+- ‘forecasted weather’ (if there are no precipitation)
+- ‘forecasted weather’ with a probability of ‘probability of precipitation’
+
+The following codes explain how the team generated real-time weather information as well as weather forecast from AccuWeather.
+
+```{r, message=FALSE, warning=FALSE}
+library(rvest)
+library(jsonlite)
+library(dplyr)
+library(httr)
+library(png)
+```
+
+```{r}
+key <- 'cErVHo27XBa8PuyskaVVJraqFpN5G9pl'
+  
+  get_weather_data_curr <- function(lat, long)
+  {
+    location <- GET(url = paste0('http://dataservice.accuweather.com/locations/v1/cities/geoposition/search?', 
+                                 'apikey=', 
+                                 key, 
+                                 '&q=',
+                                 as.character(lat),
+                                 '%2C', 
+                                 as.character(long) 
+    ) 
+    )
+    
+    location <- content(location, as = 'text') %>%fromJSON()
+    location_key <- location$Key
+    
+    weather_curr <- GET(url = paste0('http://dataservice.accuweather.com/currentconditions/v1/', 
+                                     location_key, 
+                                     '?apikey=', 
+                                     key
+    ) 
+    )
+    
+    weather_curr <- content(weather_curr, as = 'text') %>%fromJSON()
+    
+    weather_curr_text <- weather_curr$WeatherText
+    weather_curr_icon <- weather_curr$WeatherIcon
+    weather_curr_precipitate <- weather_curr$HasPrecipitation
+    weather_curr_precipitatetype <- weather_curr$PrecipitationType
+    
+    weather_forecast1 <- GET(url = paste0('http://dataservice.accuweather.com/forecasts/v1/hourly/1hour/', 
+                                          location_key, 
+                                          '?apikey=',
+                                          key 
+    ) 
+    )
+    
+    weather_forecast1 <- content(weather_forecast1, as = 'text') %>% fromJSON()
+    
+    weather_forecast1_text <- weather_forecast1$IconPhrase
+    weather_forecast1_icon <- weather_forecast1$WeatherIcon
+    weather_forecast1_precipitate <- weather_forecast1$HasPrecipitation
+    weather_forecast1_precipitateprob <- weather_forecast1$PrecipitationProbability
+    
+    weather_curr <- weather_curr
+    weather_forecast1 <- weather_forecast1
+    return (weather_curr)
+  }
+  get_weather_data_forecast1 <- function(lat, long)
+  {
+    location <- GET(url = paste0('http://dataservice.accuweather.com/locations/v1/cities/geoposition/search?', 
+                                 'apikey=', 
+                                 key, 
+                                 '&q=',
+                                 as.character(lat),
+                                 '%2C', 
+                                 as.character(long) 
+    ) 
+    )
+    
+    location <- content(location, as = 'text') %>%fromJSON()
+    location_key <- location$Key
+    
+    weather_curr <- GET(url = paste0('http://dataservice.accuweather.com/currentconditions/v1/', 
+                                     location_key, 
+                                     '?apikey=', 
+                                     key
+    ) 
+    )
+    
+    weather_curr <- content(weather_curr, as = 'text') %>%fromJSON()
+    
+    weather_curr_text <- weather_curr$WeatherText
+    weather_curr_icon <- weather_curr$WeatherIcon
+    weather_curr_precipitate <- weather_curr$HasPrecipitation
+    weather_curr_precipitatetype <- weather_curr$PrecipitationType
+    
+    weather_forecast1 <- GET(url = paste0('http://dataservice.accuweather.com/forecasts/v1/hourly/1hour/', 
+                                          location_key, 
+                                          '?apikey=',
+                                          key 
+    ) 
+    )
+    
+    weather_forecast1 <- content(weather_forecast1, as = 'text') %>% fromJSON()
+    
+    weather_forecast1_text <- weather_forecast1$IconPhrase
+    weather_forecast1_icon <- weather_forecast1$WeatherIcon
+    weather_forecast1_precipitate <- weather_forecast1$HasPrecipitation
+    weather_forecast1_precipitateprob <- weather_forecast1$PrecipitationProbability
+    
+    weather_curr <- weather_curr
+    weather_forecast1 <- weather_forecast1
+    return(weather_forecast1)
+  }
+```
+
+***
+
+<font size="3"> **3.5 Predictive Model to Forecast Availability** </font>
+
+To further enhance our application and to meet the needs of users, our team developed a predictive model based on historical data. The data was obtained from Data.gov.sg as mentioned in section 2 above. This predictive model will serve to provide a forecast of car park lots availability so that users can search for car parks based on their destination and plan their journey ahead of time. The forecasted distribution will be represented by a bar graph shown in Figure 2 below. The red bar represents the current occupancy rate. If the red bar is higher than the blue bar at a particular time (as shown in Figure 2), the current occupancy rate is higher than the expected occupancy rate. This means that there is lower availability at the current time compared to the average availability. Intuitively, there are more cars parked at the particular location and hence fewer lots available.  
+
+<center> 
+
+![Figure 2: Example of Predictive Model](predictive_model.png){width=70%}
+
+</center>
+
+However, as the historical data is obtained from Data.gov.sg, it is only available for HDB car parks. Furthermore, we can only obtain real-time availability from Datamall as it appears that the data is not stored. Hence, we were not able to obtain any historical data from other providers other than HDB. As a result, the predictive model is only available for HDB car parks.
+
+**3.5.1 Methodology** 
+
+To create the predictive model, we collected data from the past 2 months for all of the carparks for each day of the week (i.e. Monday to Sunday).
+
+1. The API was called to collect data for a specific day at 00:01 H of the day. The call is then replicated for the preceding 7 weeks. The mean of the 8 weeks’ is then calculated and stored.
+2. The first step is repeated to collect data for the entire day, with an interval of 1 hour. The stored mean value for the timing is then compiled together. And stored as a csv file.
+3. The first two steps are repeated for all days of the week to obtain the hourly mean for every day of the week. 
+
+The reason why we chose to have a static database instead of a dynamic one is due to the long runtime required to obtain the required data, which is mitigated by making parallel calls.
+
+**3.5.2 Parallel API Calls**
+
+On average, a single call to Data.gov.sg takes about 1-2 seconds. Together, it will take a long time to crawl the data for all days of the week. Furthermore, the connection to Data.gov.sg is sometimes unstable, which will result in a much longer time to collect the data. 
+
+Thus, we implemented a parallel web crawling method in order to speed up the process. It runs 4 parallel call simultaneously using separate processors. While our data collection computer has up to 8 processors, we only used 4, so as not to risk the chance of causing an overload on the server (though Data.gov.sg probably has much more resources for its server than most other smaller webpages). Even so, it takes a few minutes to compile the data for each day of the week. 
+
+The following codes explain how the team developed the predictive model. 
+
+```{r, message=FALSE, warning=FALSE}
+library(rvest)
+library(jsonlite)
+library(dplyr)
+library(httr)
+library(data.table)
+library(furrr)
+library(future)
+library(ggplot2)
+```
+
+```{r}
+get_allcarpark_multicore<- function(start_time)
+{
+  url <- "https://api.data.gov.sg/v1/transport/carpark-availability?date_time="
+  links <- function(start_time)
+  {
+    urls <- c()
+    for (i in 0:7)
+    {
+      date <- start_time - as.difftime(i*7, units = 'days')
+      date <- format(date, '%Y-%m-%dT%H:%M:%S')
+      date <- gsub(':', '%3A', date)
+      urll <- paste0(url, date)
+      urls <- c(urls, urll)
+    }
+    return (urls)
+  }
+
+  for_future <- function(url)
+  {
+    my_raw_result <- GET(url,add_headers(accept = "application/json"), timeout(30))
+    result <- content(my_raw_result, as = 'text') %>%fromJSON()
+    df <- as.data.frame(result)
+    df <- df$items.carpark_data
+    df <- df[[1]]
+  
+    # unlist nested list with id
+    unlisted <- rbindlist(df$carpark_info, fill = T, idcol = "id")
+
+    # create same id in remaining data frame
+    df$id <- seq.int(nrow(df))
+    # join data frame with unlisted list
+    df <- left_join(df, unlisted, by = "id")
+    return (df)
+  }
+  #use 4 cores
+  plan(multiprocess, workers = 6)
+  final <- future_map(links(start_time), for_future)
+  
+  carpark_hist <- final[[1]]
+  carpark_hist$percent <- 1-as.integer(carpark_hist$lots_available) / as.integer(carpark_hist$total_lots)
+  for (i in 2:length(final))
+  {
+    current <- final[[i]]
+    current$percent <- 1-as.integer(current$lots_available) / as.integer(current$total_lots)
+    names(current)[names(current) == 'percent'] <- toString(i)
+    current <- select(current, c('id', toString(i), 'lot_type'))
+    carpark_hist <- left_join(carpark_hist, current, by = c('id'='id', 'lot_type'='lot_type'))
+  }
+  carpark_hist$percent <- rowMeans(carpark_hist[8:15], na.rm = TRUE)
+
+  return(carpark_hist[1:8])
+}
+```
+
+```{r}
+
+now <- as.POSIXct(Sys.Date()) - as.difftime(7.98, units = 'hours')
+days_of_week <- c('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')
+
+get_data_day <- function(dayy)
+{
+  day_of_week <- wday(dayy)
+  day_of_week_string <- days_of_week[day_of_week]
+  combined_day <- get_allcarpark_multicore(dayy)
+  names(combined_day)[names(combined_day) == 'percent'] <- toString(hour(dayy))
+  for (i in 1:23)
+  {
+    print(paste0('Generating Data for hour ', i))
+    current_time <- dayy + as.difftime(i, units = 'hours')
+    current_data <- get_allcarpark_multicore(current_time)
+    current_data <- select(current_data, c('id', 'percent', 'lot_type'))
+    names(current_data)[names(current_data) == 'percent'] <- toString(hour(current_time))
+    combined_day <- left_join(combined_day, current_data, by = c('id'='id', 'lot_type'='lot_type'))
+  }
+  combined_day <- subset(combined_day, select = -c(carpark_info))
+  write.csv(combined_day, paste0('./Project/', day_of_week_string, '.csv'))
+  return(combined_day)
+}
+
+whole_week <- now
+
+
+for (i in 1:6)
+{
+  whole_week <- c(whole_week, now - as.difftime(i, units = 'days'))
+}
+```
+
+The following codes are to generate the csv files for each day of the week. For example, Thurdays's data will be saved as Thursday.csv. The csv files will then be loaded in the application as separate callable dataframes.
+
+get_data_day(whole_week[1])
+
+get_data_day(whole_week[2])
+
+get_data_day(whole_week[3])
+
+get_data_day(whole_week[4])
+
+get_data_day(whole_week[5])
+
+get_data_day(whole_week[6])
+
+get_data_day(whole_week[7])
+
+```{r}
+# Get the current availability rate
+generate_current <- function(carpark, start_time, veh_type)
+{
+  date <- format(start_time, '%Y-%m-%dT%H:%M:%S')
+  date <- gsub(':', '%3A', date)
+  my_raw_result <- GET(paste0("https://api.data.gov.sg/v1/transport/carpark-availability?date_time=", date), 
+                       add_headers(accept = "application/json"))
+  result <- content(my_raw_result, as = 'text') %>%fromJSON()
+  df <- as.data.frame(result)
+  df <- df$items.carpark_data
+  df <- df[[1]]
+  unlisted <- rbindlist(df$carpark_info, fill = T, idcol = "id")
+  df$id <- seq.int(nrow(df))
+  df <- left_join(df, unlisted, by = "id")
+  carpark_data <- filter(df, df$carpark_number == carpark & df$lot_type == veh_type)
+  available_now <- carpark_data$lots_available
+  percentage <- 1- as.integer(carpark_data$lots_available) / as.integer(carpark_data$total_lots)
+  return(percentage * 100)
+}
+```
+
+```{r}
+past_data_plotter <- function(carpark, start_time, veh_type)
+{
+  #generate past history
+  days_of_week <- c('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')
+  day_of_week <- wday(start_time)
+  day_of_week_string <- days_of_week[day_of_week]
+  filename <- paste0('./Project/', day_of_week_string, '.csv')
+  df <- read.csv(filename)
+  columners <- c()
+  for (i in 0:23)
+  {
+    columners <- c(columners, paste0('X', toString(i)))
+  }
+
+  row <- df[df$carpark_number == carpark & df$lot_type == veh_type,]
+  data <- subset(row, select = columners)
+  data <- as.data.frame(t(data))
+  colnames(data) <- 'Occupancy Rate'
+  data$`Occupancy Rate` <- as.numeric(data$`Occupancy Rate`) * 100
+  data$Time <- c(0:23)
+  now_time <- as.POSIXct(Sys.Date()) - as.difftime(8, units = 'hours')
+  data$Time_s <- format(now_time + as.difftime(data$Time, units = 'hours'), format = '%H:%M')
+  
+  # Get current occupancy rate
+  current_rate <- generate_current(carpark, start_time, veh_type)
+  current_y <- c(rep(0, hour(start_time)), current_rate, rep(0, 23 - hour(start_time)))
+  
+  p <- ggplot()
+  p <- p + geom_bar(data = data, aes(x = Time_s , y = `Occupancy Rate`), 
+                    stat = 'identity', fill = 'lightblue') +
+    ylim(0, 100) + 
+    ylab('Occupancy Rate (%)') + 
+    xlab('Time of Day') + 
+    scale_x_discrete(breaks = data$Time_s[seq(1, 23, 2)]) + 
+    geom_bar(aes(x = data$Time, y = current_y), 
+             stat = 'identity', 
+             fill = 'tomato', 
+             alpha = 0.3, 
+             width = 0.8) +
+    geom_vline(xintercept = hour(start_time), linetype="dotted") +
+    ggtitle('Popular Times') + 
+    theme(plot.title = element_text(size = 20, face = "bold"), panel.grid.major.x = element_blank())
+
+  return(p)
+}
+```
+
+***
+
+<font size="3"> **3.6 Map Design** </font> 
+
+Consequently, the results are shown on a map which has been zoomed into the selected area. The markers shown on the map indicate the selected car park as well as alternative car parks nearby. These markers are colour coded according to the real-time parking lots availability. The colour palette ranges from red to green. Red represents car parks that are currently full or almost to its full capacity (i.e. fewer available lots) while green represents car parks that are relatively empty (i.e. more available lots). Additionally, grey markers indicate car parks without real-time car park availability information. 
+
+To check for more information about each of the car parks, users can click on the markers and a popup will appear. The popup will include essential information such as the name of the car park, the car park rates, the number of empty lots available and whether it is sheltered (as shown in Figure 3). This information will help users decide on which car park to choose depending on their needs. For example, a user who is more price sensitive can choose to park at the car park which provides the cheapest rates while a user who is more concerned about the availability of parking lots would likely choose the car park with the highest number of parking lots available in the area.
+
+<center> 
+
+![Figure 3: Example of Map Design](map_design.png){width=90%}
+
+</center>
+
+***
+# 4. Evaluation
+
+<font size="3"> **4.1 Limitations** </font>
+
+However, no solution is perfect and we acknowledge that our application has some limitations. 
+
+**4.1.1 Limitations of Predictive Model**: The team was unable to assess historical data about car park availability for private car parks, such as shopping malls, that have different providers. The real-time data obtained from Datamall did not store any historical data. As such, we only managed to obtain historical car park availability data for HDB car parks. Hence, the predictive model is only available for HDB car parks. 
+
+**4.1.2 Limitations of Price Calculator**: Similarly, we were unable to calculate prices for private car parks due to the vast difference in pricing policies. This could have been done by hard coding. However, we believe that this would be highly inefficient due to the large amount of data stored. As such, the calculation of prices is currently only available for HDB car parks.  
+
+**4.1.3 Underrepresentation of Motorbike Lots**: It is likely that our dataset does not include all the motorcycle lots in Singapore. There is no indication as to whether every car park has parking lots that are catered specifically to motorcycles. Furthermore, most of the car parks that are labeled with motorcycle lots are largely concentrated in the South, leaving the North area empty. As such, the number of car parks that have motorcycle lots may be underrepresented in the application. 
+
+The above limitations could be further improved if additional data is obtained in future. 
+
+***
+
+<font size="3"> **4.2 Future Improvements** </font>
+
+As time progresses, so will competition in the market. As such, it is vital that we remain competitive by staying up to date with trends and introducing new features regularly. The following paragraphs detail some of the improvements that can be implemented in the next phase.  
+
+**4.2.1 Car Park Waiting Times**: As mentioned in the case description, one of the problems that users face often was the long queues, which can turn consumers away. However, a long queue does not necessarily mean a long waiting time. As such, we propose to create another function to calculate the estimated waiting time. To do this, we will need to collect additional data from car parks, especially those of high traffic (e.g. shopping malls), in order to determine the length of the queue. With more information available, consumers can then make more informed and accurate decisions.  
+
+**4.2.2 Additional Information for Electric Cars**: Two months ago, the Singapore government announced their intentions to phase out all petrol vehicles and shift Singapore's motor vehicle population to electric vehicles by 2040 (Kuttan, 2021). To accommodate this ambitious goal,  Singapore intends to build 60,000 EV charging points island-wide (Wong, 2021). As such, we propose to complement this change by integrating information regarding these charging points into the application. Information such as car parks with electronic chargers, the number of electronic chargers in each car park and their availability can be provided.  
+
+**4.2.3 Traffic Information**: On top of the above mentioned improvements, the application could also be upgraded to become a 2-in-1 platform that combines GPS and car park information. Collaboration with developers of real-time navigation, such as Google Maps and Waze, will be key to this development. This development will provide users with real-time navigation and directions to the selected location, live traffic information as well as estimated travel time. This could further increase convenience to drivers by allowing them to plan their journey ahead of time. 
+
+***
+
+<font size="3"> **4.3 Future Business Model** </font>
+
+**4.3.1 Display Advertisements**: Once a large user base has been established, we can leverage on this network to attract advertisers and make profits by displaying digital advertisements on the application. 
+
+**4.3.2 Brand Marketing**: Car park providers can also pay to further promote their car parks on the application. For example, shopping malls could pay to make their car parks the top search result or highlight them on the map. This could help to draw attention to the car parks and as a result, bring in more potential consumers to the mall.  
+
+***
+
+# 5. Conclusion
+
+In conclusion, our team strives to increase convenience for drivers by incorporating real-time parking lots availability from all providers as well as automatically calculating parking fees for them. Additionally, our team also developed a predictive model to forecast future parking lots availability to allow users to plan their journey ahead of time. By adding the weather forecast function, it helps drivers to make better decisions by taking into account the changes in weather. Therefore, our team believes that such an application will not only help to save the drivers’ time but also save money.
+
+***
+
+# 6. References 
+
+Budget Direct Insurance. (2020, January 19). Car ownership Singapore 2021. Retrieved April 18, 2021, from https://www.budgetdirect.com.sg/car-insurance/research/car-ownership-singapore
+
+Kuttan, S. (2021, February 03). Commentary: Electric vehicles will take over Singapore. but Here's what must happen first. Retrieved April 17, 2021, from https://www.channelnewsasia.com/news/commentary/singapore-budget-2020-electric-vehicles-ice-ves-hybrid-car-2040-12457240
+
+Lin, C. (2021, March 12). 'A huge opportunity For Space': What going car-lite means for SINGAPORE'S 1.4 million parking lots. Retrieved April 18, 2021, from https://www.channelnewsasia.com/news/singapore/parking-space-lots-singapore-car-lite-driving-lta-14382026
+
+Wong, P. (2021, February 27). A timeline of s'pore's electric vehicle journey so far. Retrieved April 17, 2021, from https://www.todayonline.com/singapore/spores-electric-vehicle-journey-so-far
+
+***
+
+# 7. Appendix 
+
+<center> 
+
+![Table 4: Detailed Information about Available Car Park Applications](application_summary2.png){width=70%}
+
+</center>
