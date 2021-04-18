@@ -1,5 +1,5 @@
 # Carpark Explorer
-Made using R in a Shiny App in DBA3702
+Made using R in a Shiny App
 Project-Report-Final_T3_SA2 serves as the final report
 
 To use:
