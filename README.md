@@ -8,8 +8,8 @@ Main app is in Carpark Explorer App.R.
 Download this file and run on your RStudio.
 
 Datasets used:
-Project folder
-Carpark v9.csv
+Project folder,
+Carpark v9.csv,
 public-holidays-2021.csv
 
 Styling:
