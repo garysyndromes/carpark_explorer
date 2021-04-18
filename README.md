@@ -1,2 +1,3 @@
-# carpark_explorer
-Shiny App in R made during DBA3702
+# Carpark Explorer
+Made using R in a Shiny App in DBA3702
+
